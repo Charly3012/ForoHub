@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -21,10 +22,16 @@ public class AutorController {
     @Autowired
     private AutorRepository autorRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @PostMapping
     public ResponseEntity<DatosRespuestaAutor> crearAutor(@RequestBody @Valid DatosRegistroAutor datosRegistroAutor,
                                                           UriComponentsBuilder uriComponentsBuilder){
-        Autor autor = autorRepository.save(new Autor(datosRegistroAutor));
+        String contrasenaEncriptada = passwordEncoder.encode(datosRegistroAutor.contrasena());
+        Autor autor = new Autor(datosRegistroAutor);
+        autor.setContrasena(contrasenaEncriptada);
+        autorRepository.save(autor);
         URI url = uriComponentsBuilder.path("/autores/{id}").buildAndExpand(autor.getId()).toUri();
         return ResponseEntity.created(url).body(new DatosRespuestaAutor(autor));
     }
